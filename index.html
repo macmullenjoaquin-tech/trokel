@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TROKEL · Portamaní</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #171514; --card: #211e1c; --line: #34302d; --text: #F3EFEA;
+    --muted: #a49d96; --accent: #E3101C;
+    /* chapa */
+    --s-fill: #3a3633; --s-top: #a39d96; --s-3: #8c8680; --s-2: #75706a; --s-1: #5f5a56; --s-0: #4a4643;
+    --s-edge-hi: #d6cfc6; --s-edge-mid: #827c75; --s-bend: #75706a;
+    /* panel que se pliega */
+    --f-top: #e3101c; --f-3: #c90d18; --f-2: #aa0b14; --f-1: #8b0910; --f-0: #6d070c;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); }
+  body {
+    font-family: Roboto, system-ui, sans-serif;
+    min-height: 100vh; min-height: 100dvh;
+    padding: calc(env(safe-area-inset-top) + 28px) 16px calc(env(safe-area-inset-bottom) + 28px);
+    display: flex; flex-direction: column; align-items: center;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .wrap { width: 100%; max-width: 520px; display: flex; flex-direction: column; align-items: center; }
+  .logo { color: var(--accent); font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: clamp(64px, 19vw, 104px);
+          line-height: .9; letter-spacing: .05em; margin: 4px 0 0; padding-left: .05em; }
+  .sub { font-family: 'Barlow Condensed', sans-serif; font-weight: 500; letter-spacing: .14em;
+         text-transform: uppercase; color: var(--muted); font-size: 15px; margin: 10px 0 22px; text-align: center; }
+
+  .card {
+    position: relative; width: 100%; aspect-ratio: 1 / 1.08; border-radius: 22px;
+    background:
+      radial-gradient(55% 22% at 50% 70%, rgba(227,16,28,.12) 0%, rgba(227,16,28,0) 100%),
+      radial-gradient(120% 90% at 50% 38%, #2c2825 0%, #1d1a18 62%, #181614 100%);
+    border: 1px solid var(--line); overflow: hidden; touch-action: pan-y; cursor: grab; user-select: none;
+  }
+  .card.drag { cursor: grabbing; }
+  .card svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .card svg path { vector-effect: non-scaling-stroke; }
+  .tag { position: absolute; top: 14px; left: 16px; right: 16px; display: flex; justify-content: space-between;
+         font-family: 'Barlow Condensed', sans-serif; font-weight: 600; letter-spacing: .12em; font-size: 13px;
+         color: var(--muted); pointer-events: none; text-transform: uppercase; }
+  .tag b { color: var(--accent); font-weight: 600; }
+  .tag .deg { color: var(--text); font-variant-numeric: tabular-nums; }
+
+  .btn {
+    position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 10px; border: 0; cursor: pointer;
+    background: var(--accent); color: #1a1310; border-radius: 999px; padding: 12px 22px 12px 14px;
+    font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 19px; letter-spacing: .04em;
+    box-shadow: 0 10px 30px rgba(227,16,28,.30); transition: background .2s, transform .2s; white-space: nowrap;
+  }
+  .btn:active { transform: translateX(-50%) scale(.97); }
+  .btn:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
+  .btn .ico { width: 30px; height: 30px; border-radius: 50%; background: #1a1310; display: grid; place-items: center; }
+  .btn .ico svg { position: static; width: 18px; height: 18px; }
+  .btn.on { background: var(--text); box-shadow: 0 10px 30px rgba(0,0,0,.3); }
+
+  .slider { width: 100%; margin: 16px 0 0; }
+  .slider .row { display: flex; align-items: center; gap: 12px; }
+  .slider .end { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: .12em; color: var(--muted); text-transform: uppercase; }
+  .track { flex: 1; position: relative; }
+  input[type=range] { width: 100%; margin: 0; -webkit-appearance: none; appearance: none; height: 28px; background: transparent; outline: none; cursor: pointer; }
+  input[type=range]::-webkit-slider-runnable-track { height: 4px; border-radius: 4px;
+    background: linear-gradient(to right, var(--accent) var(--p, 0%), var(--line) var(--p, 0%)); }
+  input[type=range]::-moz-range-track { height: 4px; border-radius: 4px;
+    background: linear-gradient(to right, var(--accent) var(--p, 0%), var(--line) var(--p, 0%)); }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; margin-top: -9px; border-radius: 50%; background: var(--text); border: 4px solid var(--accent); }
+  input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: var(--text); border: 4px solid var(--accent); }
+  input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rgba(243,239,234,.35); }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); margin: 2px 0 0; }
+  .steps button { font: inherit; background: none; border: 0; border-left: 1px solid var(--line); cursor: pointer;
+                  font-family: 'Barlow Condensed', sans-serif; font-size: 12.5px; letter-spacing: .1em; text-transform: uppercase;
+                  color: var(--muted); text-align: center; padding: 4px 2px 2px; transition: color .2s; line-height: 1.25; }
+  .steps button:first-child { border-left: 0; }
+  .steps button.on { color: var(--text); }
+  .steps button:hover { color: var(--text); }
+  .steps button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 6px; }
+  .steps i { font-style: normal; color: var(--accent); margin-right: 4px; }
+  .steps small { display: block; font-size: 11.5px; letter-spacing: .08em; color: var(--muted); opacity: .8; font-variant-numeric: tabular-nums; }
+  .steps button.on small { color: var(--accent); opacity: 1; }
+
+  .hint { color: var(--muted); font-size: 14px; line-height: 1.45; text-align: center; margin: 16px 8px 22px; }
+  .hint b { color: var(--text); font-weight: 500; }
+  .dims { width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .dims div { text-align: center; padding: 14px 4px; }
+  .dims div + div { border-left: 1px solid var(--line); }
+  .dims small { display: block; font-family: 'Barlow Condensed', sans-serif; letter-spacing: .16em; color: var(--muted); font-size: 12px; }
+  .dims strong { display: block; font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 26px; margin-top: 4px; }
+  .dims strong em { font-style: normal; font-size: 16px; color: var(--muted); margin-left: 3px; }
+  .parts { width: 100%; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 18px 0 6px; }
+  .parts span { border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; font-size: 13px; color: var(--muted); }
+  .parts span b { color: var(--text); font-weight: 500; }
+
+  /* chapa */
+  .shadow { fill: #000; filter: blur(7px); }
+  .sheet .p-fill { fill: var(--s-fill); }
+  .sheet .p-top { fill: var(--s-top); }
+  .sheet .p-s3 { fill: var(--s-3); } .sheet .p-s2 { fill: var(--s-2); } .sheet .p-s1 { fill: var(--s-1); } .sheet .p-s0 { fill: var(--s-0); }
+  .sheet .folding .p-fill, .sheet .folding .p-top { fill: var(--f-top); }
+  .sheet .folding .p-s3 { fill: var(--f-3); } .sheet .folding .p-s2 { fill: var(--f-2); } .sheet .folding .p-s1 { fill: var(--f-1); } .sheet .folding .p-s0 { fill: var(--f-0); }
+  .sheet .e-hi, .sheet .e-mid, .sheet .bend-hi { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .sheet .e-hi { stroke: var(--s-edge-hi); stroke-width: .7px; }
+  .sheet .e-mid { stroke: var(--s-edge-mid); stroke-width: .6px; }
+  .sheet .folding .e-hi { stroke: #ffc4c7; }
+  .sheet .bend-hi { stroke: #fff; stroke-width: 1.2px; }
+  .sheet .bend { fill: none; stroke: var(--s-bend); stroke-linecap: butt; }
+  .folds path { fill: none; stroke: var(--accent); stroke-width: 1.2px; stroke-dasharray: 5 4; stroke-linecap: round; }
+  @media (prefers-reduced-motion: reduce) { .btn { transition: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 class="logo">TROKEL</h1>
+  <div class="sub">Portamaní · chapa plegada</div>
+
+  <div class="card" id="card" role="img" aria-label="Portamaní TROKEL en 3D: arrastrá para girarlo">
+    <svg id="view" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 108" aria-hidden="true">
+      <path class="shadow" id="shadow" d=""/>
+      <g class="sheet" id="sheet"></g>
+      <g class="folds" id="folds"></g>
+    </svg>
+    <div class="tag"><span id="tag">CHAPA <b>PLANA</b></span><span class="deg" id="deg"></span></div>
+    <button class="btn" id="btn" type="button" aria-pressed="false">
+      <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#E3101C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 18h16"/><path d="M4 18 9 7"/><path d="M20 18 15 7"/><path d="M12 3v7M9.5 7.5 12 10l2.5-2.5"/></svg></span>
+      <span id="btnTxt">Plegar</span>
+    </button>
+  </div>
+
+  <div class="slider">
+    <div class="row">
+      <span class="end">Plana</span>
+      <div class="track"><input type="range" id="range" min="0" max="3000" value="0" step="1" aria-label="Plegado" aria-valuetext="Chapa plana"></div>
+      <span class="end">Plegada</span>
+    </div>
+    <div class="steps" id="steps"><button type="button" data-to="1"><i>1</i>Asa<small>97,5°</small></button><button type="button" data-to="2"><i>2</i>Alas ×6<small>67°</small></button><button type="button" data-to="3"><i>3</i>Pestaña<small>90°</small></button></div>
+  </div>
+
+  <p class="hint">Arrastrá para girarlo. Tocá <b>“Plegar”</b> o deslizá la barra para ver cómo se dobla.</p>
+
+  <div class="dims">
+    <div><small>LARGO</small><strong id="dimL">–<em>cm</em></strong></div>
+    <div><small>ANCHO</small><strong id="dimW">–<em>cm</em></strong></div>
+    <div><small>ALTO</small><strong id="dimH">–<em>cm</em></strong></div>
+  </div>
+
+  <div class="parts">
+    <span><b>1</b> chapa <b id="flat">–</b></span><span><b>9</b> paneles</span><span><b>8</b> pliegues</span><span><b>3</b> pasos</span><span><b>1,6</b> mm</span>
+  </div>
+</div>
+
+<script>
+(function () {
+const PANELS = [{"name":"Base","parent":null,"stage":-1,"loops":[{"outer":true,"pts":[[-65.14,178.89],[-96.2,97.98],[-94.47,98.74],[-92.95,94.44],[-94.8,93.97],[-1.25,39.87],[-1.72,41.69],[1.83,42.67],[23.27,98.53],[25.14,97.82],[28.08,97.2],[26.91,96.42],[26.84,96.09],[132.22,73.77],[131.17,75.36],[135.18,77.54],[135.95,75.81],[167.01,156.73],[165.28,155.96],[163.76,160.26],[165.61,160.74],[72.36,214.66],[72.18,214.37],[72.53,213.01],[68.98,212.03],[47.54,156.17],[45.67,156.88],[42.74,157.5],[44.3,158.54],[-61.41,180.93],[-60.36,179.34],[-64.37,177.17]],"sign":1},{"outer":false,"pts":[[124.14,76.85],[122.95,76.08],[83.7,84.39],[82.56,85.65],[84.11,86.35],[123.37,78.03]],"sign":-1},{"outer":false,"pts":[[76.69,86.9],[75.13,86.21],[35.88,94.52],[34.74,95.78],[36.29,96.48],[75.55,88.16]],"sign":-1},{"outer":false,"pts":[[-91.96,105.28],[-92.54,106.57],[-81.79,134.58],[-80.5,135.15],[-79.92,133.86],[-90.67,105.85]],"sign":-1},{"outer":false,"pts":[[-78.35,140.76],[-78.92,142.05],[-68.17,170.05],[-66.88,170.63],[-66.3,169.34],[-77.05,141.33]],"sign":-1},{"outer":false,"pts":[[78.43,209.6],[80.12,209.78],[114.86,189.69],[115.55,188.14],[113.86,187.96],[79.12,208.05]],"sign":-1},{"outer":false,"pts":[[120.75,185.13],[122.44,185.31],[157.17,165.22],[157.54,163.86],[156.17,163.49],[121.44,183.58]],"sign":-1},{"outer":false,"pts":[[149.16,113.95],[149.73,112.65],[138.98,84.65],[137.69,84.07],[137.11,85.36],[147.87,113.37]],"sign":-1},{"outer":false,"pts":[[162.78,149.42],[163.35,148.13],[152.6,120.12],[151.31,119.55],[150.73,120.84],[161.48,148.85]],"sign":-1},{"outer":false,"pts":[[-5.69,167.76],[-4.14,168.46],[35.12,160.14],[35.89,158.96],[34.7,158.18],[-4.55,166.5]],"sign":-1},{"outer":false,"pts":[[-53.51,177.89],[-51.95,178.59],[-12.7,170.27],[-11.56,169.01],[-13.12,168.31],[-52.37,176.63]],"sign":-1},{"outer":false,"pts":[[-49.77,69.47],[-51.46,69.3],[-86.2,89.38],[-86.89,90.94],[-85.2,91.11],[-50.46,71.03]],"sign":-1},{"outer":false,"pts":[[-7.78,45.19],[-9.15,44.83],[-43.88,64.91],[-44.57,66.47],[-42.88,66.64],[-8.15,46.56]],"sign":-1}],"hinge":null},{"name":"Ala A","parent":"Base","stage":1,"loops":[{"outer":true,"pts":[[-96.22,97.96],[-65.15,178.92],[-66.09,181.04],[-72.63,183.55],[-74.55,183.88],[-76.45,183.45],[-78.05,182.32],[-79.09,180.67],[-107.76,105.99],[-108.09,104.06],[-107.66,102.16],[-106.53,100.57],[-104.88,99.53],[-98.35,97.02]],"sign":1}],"hinge":{"p":[-96.21199668438396,97.96958006737125,0.8],"u":[0.3583679495452998,0.933580426497202,0],"angle":66.99999999999834,"ends":[[-96.21199668438396,97.96958006737125,0.8],[-65.14356329214291,178.9056161546663,0.8]]}},{"name":"Ala B","parent":"Base","stage":1,"loops":[{"outer":true,"pts":[[72.37,214.68],[165.64,160.74],[167.9,161.33],[171.95,168.07],[172.57,169.67],[172.61,171.39],[172.06,173.02],[171,174.37],[100.04,237.69],[97.97,239.11],[95.62,239.98],[93.13,240.23],[90.65,239.85],[88.35,238.87],[86.36,237.35],[84.81,235.38]],"sign":1}],"hinge":{"p":[72.3623791982733,214.66870937338177,0.8],"u":[0.8656806457306542,-0.5005966635999064,0],"angle":66.9999999999958,"ends":[[72.3623791982733,214.66870937338177,0.8],[165.62247566039747,160.73924546981834,0.8]]}},{"name":"Ala C","parent":"Base","stage":1,"loops":[{"outer":true,"pts":[[-61.43,180.96],[44.32,158.56],[46.24,159.83],[50.62,182.33],[50.78,184.83],[50.32,187.29],[49.27,189.56],[47.68,191.5],[45.66,192.98],[43.33,193.91],[40.85,194.24],[-56.29,194.67],[-57.99,194.38],[-59.49,193.54],[-60.61,192.23],[-61.22,190.63],[-62.72,182.91]],"sign":1}],"hinge":{"p":[-61.41968757001493,180.94600426829948,0.8],"u":[0.9782906414464918,-0.20723759518536075,0],"angle":67.00000000000347,"ends":[[-61.41968757001493,180.94600426829948,0.8],[44.3119648855955,158.54818866875866,0.8]]}},{"name":"Ala D","parent":"Base","stage":1,"loops":[{"outer":true,"pts":[[132.24,73.74],[26.84,96.07],[22.23,72.36],[22.06,69.86],[22.52,67.4],[23.58,65.13],[25.17,63.19],[27.19,61.71],[29.52,60.78],[32,60.45],[127.1,60.03],[128.8,60.32],[130.3,61.16],[131.42,62.47],[132.03,64.07],[133.53,71.79]],"sign":1}],"hinge":{"p":[132.2322593839706,73.75475818033799,0.8],"u":[-0.9782906414464918,0.20723759518536086,0],"angle":67.00000000000058,"ends":[[132.2322593839706,73.75475818033799,0.8],[26.84064639222095,96.08054103442149,0.8]]}},{"name":"Ala E","parent":"Base","stage":1,"loops":[{"outer":true,"pts":[[167.04,156.74],[135.96,75.78],[136.91,73.66],[143.44,71.15],[145.36,70.82],[147.27,71.25],[148.86,72.38],[149.9,74.03],[178.57,148.71],[178.9,150.64],[178.47,152.54],[177.35,154.13],[175.7,155.17],[169.16,157.68]],"sign":1}],"hinge":{"p":[167.024568498335,156.73118238125386,0.8],"u":[-0.3583679495452996,-0.933580426497202,0],"angle":67.0000000000002,"ends":[[167.024568498335,156.73118238125386,0.8],[135.95613510609866,75.79514629397104,0.8]]}},{"name":"Ala F (lleva el asa)","parent":"Base","stage":1,"loops":[{"outer":true,"pts":[[-10.18,12.55],[-0.39,35.11],[-3.42,33.03],[-0.67,37.61],[-1.25,39.84],[-94.82,93.96],[-97.09,93.37],[-101.14,86.64],[-101.76,85.03],[-101.8,83.31],[-101.25,81.68],[-100.18,80.33],[-23.2,11.63],[-21.71,10.71],[-20,10.37],[-18.27,10.63],[-16.74,11.47],[-15.59,12.79],[-10.44,16.84]],"sign":1}],"hinge":{"p":[-1.2489095016468355,39.85805302467205,0.8],"u":[-0.865680645730667,0.5005966635998839,0],"angle":66.99999999999714,"ends":[[-1.2489095016468355,39.85805302467205,0.8],[-94.8099038464417,93.96151697881912,0.8]]}},{"name":"Asa","parent":"Ala F (lleva el asa)","stage":0,"loops":[{"outer":true,"pts":[[-0.36,35.14],[-10.17,12.5],[-9.98,9.38],[-9.51,6.92],[-8.45,4.65],[-6.85,2.71],[-4.82,1.24],[-2.49,0.31],[0,0],[191.18,0],[193.88,0.37],[196.39,1.47],[198.51,3.2],[200.07,5.44],[200.98,8.02],[201.15,10.75],[200.57,13.42],[194.02,31.42],[192.92,33.59],[191.32,35.43],[189.32,36.83],[187.04,37.7],[184.62,38],[180.97,38],[180.97,41.28],[179.74,41.83],[176.45,41.83],[174.51,40.84],[154.43,40.84],[152.49,41.83],[149.2,41.83],[147.97,41.28],[147.97,38],[6.91,38],[4.92,37.8],[3,37.21],[1.25,36.24]],"sign":1},{"outer":false,"pts":[[130.62,8],[65.65,8],[63.87,8.33],[62.32,9.26],[61.21,10.69],[60.68,12.42],[60.8,14.22],[63.25,18.29],[63.25,18.29],[64.14,19.21],[65.27,19.8],[66.53,20],[129.74,20],[131,19.8],[132.13,19.21],[134.71,15.87],[134.71,15.87],[135.47,14.22],[135.58,12.42],[135.05,10.69],[133.94,9.26],[132.4,8.33]],"sign":-1}],"hinge":{"p":[-0.3781426586262171,35.12536989653492,0.8],"u":[-0.39775625793839986,-0.9174911221754907,0],"angle":97.49999999999964,"ends":[[-0.3781426586262171,35.12536989653492,0.8],[-10.175516889891743,12.52609283070643,0.8]]}},{"name":"Pestana del asa","parent":"Asa","stage":2,"loops":[{"outer":true,"pts":[[176.45,41.85],[179.74,41.85],[180.97,42.4],[180.97,48.8],[180.59,50.71],[179.5,52.34],[177.88,53.42],[175.97,53.8],[152.97,53.8],[151.05,53.42],[149.43,52.34],[148.35,50.71],[147.97,48.8],[147.97,42.4],[149.2,41.85],[152.49,41.85],[154.43,42.84],[174.51,42.84]],"sign":1}],"hinge":{"p":[149.21792206556543,41.84117423708586,0.8],"u":[1,4.368090588689132e-15,0],"angle":-90.00000000000077,"ends":[[149.21792206556543,41.84117423708586,0.8],[179.71792206556552,41.841174237085994,0.8]]}}];
+const T = 1.6, RAD = Math.PI / 180;
+const BASE_AZ = 45, ELEV = 30;
+
+// ---------- cámara ortográfica (unidades = mm) ----------
+let C, V;
+function setCam(az) {
+  const a = az * RAD, e = ELEV * RAD;
+  C = { sinA: Math.sin(a), cosA: Math.cos(a), sinE: Math.sin(e), cosE: Math.cos(e) };
+  V = [C.cosA * C.cosE, C.sinA * C.cosE, C.sinE];
+}
+// la cámara gira alrededor del centro de la chapa, no del origen del modelo
+let CX = 0, CY = 0;
+const iso = ([x, y, z]) => { x -= CX; y -= CY; return [x * C.sinA - y * C.cosA, (x * C.cosA + y * C.sinA) * C.sinE - z * C.cosE]; };
+const LIGHT = [-Math.sin(BASE_AZ * RAD), Math.cos(BASE_AZ * RAD)];
+
+// ---------- transformaciones rígidas ----------
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const ease = (t) => 0.5 - 0.5 * Math.cos(Math.PI * clamp(t, 0, 1));
+const byName = Object.fromEntries(PANELS.map((p) => [p.name, p]));
+const ID = [[1,0,0,0,1,0,0,0,1],[0,0,0]];
+function rot(u, th) {
+  const [x, y, z] = u, c = Math.cos(th), s = Math.sin(th), K = 1 - c;
+  return [x*x*K+c, x*y*K-z*s, x*z*K+y*s, y*x*K+z*s, y*y*K+c, y*z*K-x*s, z*x*K-y*s, z*y*K+x*s, z*z*K+c];
+}
+const mulR = (a, b) => [0,1,2].flatMap((i) => [0,1,2].map((j) => a[i*3]*b[j] + a[i*3+1]*b[3+j] + a[i*3+2]*b[6+j]));
+const apR = (R, p) => [R[0]*p[0]+R[1]*p[1]+R[2]*p[2], R[3]*p[0]+R[4]*p[1]+R[5]*p[2], R[6]*p[0]+R[7]*p[1]+R[8]*p[2]];
+const ap = (M, p) => { const q = apR(M[0], p); return [q[0]+M[1][0], q[1]+M[1][1], q[2]+M[1][2]]; };
+function hingeM(h, th) { const R = rot([h.u[0], h.u[1], 0], th); const rp = apR(R, h.p); return [R, [h.p[0]-rp[0], h.p[1]-rp[1], h.p[2]-rp[2]]]; }
+const compose = (A, B) => [mulR(A[0], B[0]), ap(A, B[1])];
+
+// u: 0 plana · 1 asa · 2 alas · 3 pestaña (con giro de la pieza)
+function poseAt(u) {
+  const frac = [ease(u), ease(u - 1), ease((u - 2.3) / 0.45)];
+  const W = {};
+  for (const p of PANELS) {
+    if (!p.parent) { W[p.name] = ID; continue; }
+    W[p.name] = compose(W[p.parent], hingeM(p.hinge, (p.hinge.angle * RAD) * frac[p.stage]));
+  }
+  return { W, frac };
+}
+const PIVOT = [35, 118, 20], YAW = 80 * RAD, AXIS = [Math.cos(BASE_AZ * RAD), Math.sin(BASE_AZ * RAD), 0];
+const LIFT_FOLD = 14.5, LIFT_DONE = 3.3, SWING = 40, REST_FLIPPED = 0.1;
+function bodyPose(u) {
+  const t = u - 2;
+  let e = 0, z0 = LIFT_FOLD * ease(u - 1);
+  if (t > 0) {
+    if (t < 0.75) { e = ease(t / 0.3); z0 = LIFT_FOLD; }
+    else { e = 1 - ease((t - 0.75) / 0.25); z0 = LIFT_DONE; }
+  }
+  const R = mulR(rot([0, 0, 1], YAW * e), rot(AXIS, -Math.PI * e));
+  const pz = PIVOT[2] + z0 * (1 - e) + REST_FLIPPED * e + SWING * Math.sin(Math.PI * e);
+  const q = apR(R, PIVOT);
+  return { M: [R, [PIVOT[0] - q[0], PIVOT[1] - q[1], pz - q[2]]], e };
+}
+function worldAt(u) {
+  const { W: L, frac } = poseAt(u);
+  const body = bodyPose(u);
+  const W = {};
+  for (const p of PANELS) W[p.name] = compose(body.M, L[p.name]);
+  return { W, frac, body };
+}
+const outerOf = (p) => p.loops.find((l) => l.outer).pts;
+
+// ---------- dibujo ----------
+const f1 = (v) => v.toFixed(2);
+const pathOfPts = (pts) => "M" + pts.map((p) => f1(p[0]) + " " + f1(p[1])).join("L") + "Z";
+const shadeOf = (n) => {
+  if (n[2] > 0.62) return "p-top";
+  const h = Math.hypot(n[0], n[1]) || 1;
+  const lit = ((n[0]*LIGHT[0] + n[1]*LIGHT[1]) / h + 1) / 2;
+  return "p-s" + Math.min(3, Math.max(0, Math.floor(lit * 4)));
+};
+const dot = (a) => a[0]*V[0] + a[1]*V[1] + a[2]*V[2];
+function panelSvg(p, M, active) {
+  const R = M[0];
+  const nTop = apR(R, [0, 0, 1]);
+  const topFacing = dot(nTop) > 0;
+  const zNear = topFacing ? T : 0, zFar = topFacing ? 0 : T;
+  const sides = [], farLoops = [], nearLoops = [];
+  let fill = "";
+  for (const l of p.loops) {
+    const near = l.pts.map(([x, y]) => iso(ap(M, [x, y, zNear])));
+    const far = l.pts.map(([x, y]) => iso(ap(M, [x, y, zFar])));
+    const nl = l.pts.length;
+    for (let i = 0; i < nl; i++) {
+      const a = l.pts[i], b = l.pts[(i + 1) % nl];
+      const dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy) || 1;
+      const sg = l.sign * (l.outer ? 1 : -1);
+      const n = apR(R, [sg * dy / len, -sg * dx / len, 0]);
+      if (dot(n) <= 0) continue;
+      sides.push('<path class="' + shadeOf(n) + '" d="' + pathOfPts([near[i], near[(i + 1) % nl], far[(i + 1) % nl], far[i]]) + '"/>');
+    }
+    farLoops.push(pathOfPts(far));
+    nearLoops.push(pathOfPts(near));
+    if (l.outer) fill = pathOfPts(near) + pathOfPts(far);
+  }
+  const nNear = topFacing ? nTop : nTop.map((v) => -v);
+  return '<g' + (active ? ' class="folding"' : '') + '>' +
+    '<path class="p-fill" d="' + fill + '"/>' + sides.join("") +
+    '<path class="e-mid" d="' + farLoops[0] + '"/>' +
+    '<path class="' + shadeOf(nNear) + '" fill-rule="evenodd" d="' + nearLoops.join("") + '"/>' +
+    '<path class="e-hi" d="' + nearLoops.join("") + '"/></g>';
+}
+let pxPerUnit = 1;
+function bendSvg(p, W, active) {
+  const M = W[p.parent];
+  const a = iso(ap(M, p.hinge.ends[0])), b = iso(ap(M, p.hinge.ends[1]));
+  const d = "M" + f1(a[0]) + " " + f1(a[1]) + "L" + f1(b[0]) + " " + f1(b[1]);
+  let s = '<path class="bend" d="' + d + '" style="stroke-width:' + (T * pxPerUnit).toFixed(2) + 'px"/>';
+  if (active) s += '<path class="bend-hi" d="' + d + '"/>';
+  return s;
+}
+function centroidDepth(p, M) {
+  const o = outerOf(p);
+  let sx = 0, sy = 0; for (const [x, y] of o) { sx += x; sy += y; }
+  return dot(ap(M, [sx / o.length, sy / o.length, T / 2]));
+}
+function projectedBox(W) {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const p of PANELS) for (const [x, y] of outerOf(p)) for (const z of [0, T]) {
+    const [sx, sy] = iso(ap(W[p.name], [x, y, z]));
+    if (sx < x0) x0 = sx; if (sx > x1) x1 = sx; if (sy < y0) y0 = sy; if (sy > y1) y1 = sy;
+  }
+  return { x0, y0, x1, y1 };
+}
+function convexHull(points) {
+  const s = [...points].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  if (s.length < 3) return s;
+  const cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const lo = [], up = [];
+  for (const p of s) { while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
+  for (let i = s.length - 1; i >= 0; i--) { const p = s[i]; while (up.length >= 2 && cr(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); }
+  return [...lo.slice(0, -1), ...up.slice(0, -1)];
+}
+
+function minRect(hull) {
+  let best = null;
+  for (let i = 0; i < hull.length; i++) {
+    const a = hull[i], b = hull[(i + 1) % hull.length];
+    const L = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1, ux = (b[0] - a[0]) / L, uy = (b[1] - a[1]) / L;
+    let m0 = Infinity, m1 = -Infinity, n0 = Infinity, n1 = -Infinity;
+    for (const [x, y] of hull) { const s = x * ux + y * uy, t = -x * uy + y * ux; m0 = Math.min(m0, s); m1 = Math.max(m1, s); n0 = Math.min(n0, t); n1 = Math.max(n1, t); }
+    const area = (m1 - m0) * (n1 - n0);
+    if (!best || area < best.area) best = { area, a: m1 - m0, b: n1 - n0 };
+  }
+  return best;
+}
+
+// ---------- medidas del modelo plegado (rectángulo mínimo en planta) ----------
+(function measure() {
+  const { W } = worldAt(3);
+  const pts = [], zs = [];
+  for (const p of PANELS) for (const [x, y] of outerOf(p)) for (const z of [0, T]) { const q = ap(W[p.name], [x, y, z]); pts.push([q[0], q[1]]); zs.push(q[2]); }
+  const best = minRect(convexHull(pts));
+  const cm = (mm) => (Math.round(mm / 10 * 10) / 10).toFixed(1).replace(".", ",").replace(/,0$/, "");
+  document.getElementById("dimL").firstChild.nodeValue = cm(Math.max(best.a, best.b));
+  document.getElementById("dimW").firstChild.nodeValue = cm(Math.min(best.a, best.b));
+  document.getElementById("dimH").firstChild.nodeValue = cm(Math.max(...zs) - Math.min(...zs));
+  const flat = []; for (const p of PANELS) for (const [x, y] of outerOf(p)) flat.push([x, y]);
+  const fr = minRect(convexHull(flat));
+  document.getElementById("flat").textContent = cm(Math.max(fr.a, fr.b)) + " × " + cm(Math.min(fr.a, fr.b)) + " cm";
+})();
+
+// ---------- encuadre: el portamaní llena el recuadro ----------
+const card = document.getElementById("card");
+const svgEl = document.getElementById("view");
+const sheet = document.getElementById("sheet");
+const shadowEl = document.getElementById("shadow");
+const foldsEl = document.getElementById("folds");
+let BASE = null;
+function baseBox() {
+  // todas las poses sin el giro del paso 3, vistas desde todos los ángulos
+  let b = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
+  const us = []; for (let u = 0; u <= 2.0001; u += 0.1) us.push(u); us.push(3);
+  for (let az = 0; az < 360; az += 15) {
+    setCam(az);
+    for (const u of us) {
+      const q = projectedBox(worldAt(u).W);
+      b = { x0: Math.min(b.x0, q.x0), y0: Math.min(b.y0, q.y0), x1: Math.max(b.x1, q.x1), y1: Math.max(b.y1, q.y1) };
+    }
+  }
+  return b;
+}
+const ZOOM = 1.7;
+function zoomAt(u) {
+  const t = u - 2;
+  if (t <= 0.18 || t >= 0.86) return 0;
+  return t < 0.75 ? ease((t - 0.18) / 0.12) : 1 - ease((t - 0.75) / 0.11);
+}
+function frame(u, W) {
+  const cw = card.clientWidth || 1, ch = card.clientHeight || 1;
+  const top = 46, bottom = 82, side = 14;
+  const cur = projectedBox(W);
+  const b = { x0: Math.min(BASE.x0, cur.x0), y0: Math.min(BASE.y0, cur.y0), x1: Math.max(BASE.x1, cur.x1), y1: Math.max(BASE.y1, cur.y1) };
+  const bw = b.x1 - b.x0, bh = b.y1 - b.y0;
+  let s = Math.min((cw - side * 2) / bw, (ch - top - bottom) / bh);
+  let cx = (b.x0 + b.x1) / 2, cy = (b.y0 + b.y1) / 2;
+  // centro del área libre (entre la etiqueta y el botón)
+  const freeCy = top + (ch - top - bottom) / 2;
+  let vx = cx - (cw / 2) / s, vy = cy - freeCy / s, vw = cw / s, vh = ch / s;
+  const a = zoomAt(u);
+  if (a > 0) {
+    const tab = byName["Pestana del asa"], o = outerOf(tab);
+    let sx = 0, sy = 0; for (const [x, y] of o) { sx += x; sy += y; }
+    const f = iso(ap(W[tab.name], [sx / o.length, sy / o.length, T / 2]));
+    const z = 1 + (ZOOM - 1) * a;
+    const fcx = vx + vw / 2 + (f[0] - (vx + vw / 2)) * a, fcy = vy + vh / 2 + (f[1] - (vy + vh / 2)) * a;
+    vw /= z; vh /= z; vx = fcx - vw / 2; vy = fcy - vh / 2; s *= z;
+  }
+  pxPerUnit = s;
+  svgEl.setAttribute("viewBox", f1(vx) + " " + f1(vy) + " " + f1(vw) + " " + f1(vh));
+}
+
+// ---------- estado y textos ----------
+const STEPS = [{ what: "Asa", angle: 97.5 }, { what: "Alas ×6", angle: 67 }, { what: "Pestaña", angle: 90 }];
+const tagEl = document.getElementById("tag"), degEl = document.getElementById("deg");
+const range = document.getElementById("range"), btn = document.getElementById("btn"), btnTxt = document.getElementById("btnTxt");
+const stepEls = [...document.querySelectorAll("#steps button")];
+const fmt = (v) => v.toFixed(1).replace(".", ",").replace(/,0$/, "");
+let az = BASE_AZ, lastKey = "";
+function draw(u) {
+  const key = u.toFixed(4) + "|" + az.toFixed(2) + "|" + card.clientWidth;
+  if (key === lastKey) return;
+  lastKey = key;
+  setCam(az);
+  const { W, frac, body } = worldAt(u);
+  frame(u, W);
+  const step = clamp(Math.floor(u), 0, 2);
+  const moving = u > 0.001 && u < 2.999 && frac[step] > 0.001 && frac[step] < 0.999;
+  const up = dot(apR(W.Base[0], [0, 0, 1])) > 0;
+  const tab = "Pestana del asa";
+  const items = PANELS.map((p) => ({ p, key: !p.parent ? (up ? -1e9 : 1e8) : (!up && p.name === tab) ? 1e9 : centroidDepth(p, W[p.name]) }));
+  items.sort((a, b) => a.key - b.key);
+  const html = [];
+  for (const { p } of items) {
+    if (p.parent) html.push(bendSvg(p, W, p.stage === step && moving));
+    html.push(panelSvg(p, W[p.name], moving && p.stage === step));
+  }
+  sheet.innerHTML = html.join("");
+  // líneas de pliegue que faltan doblar: rojas y punteadas, se apagan al plegarse
+  const fold = [];
+  for (const p of PANELS) {
+    if (!p.parent) continue;
+    const op = (1 - frac[p.stage]) * (1 - body.e);
+    if (op < 0.02 || (moving && p.stage === step)) continue;
+    const M = W[p.parent];
+    const [x0, y0] = p.hinge.ends[0], [x1, y1] = p.hinge.ends[1];
+    const a = iso(ap(M, [x0, y0, T])), c = iso(ap(M, [x1, y1, T]));
+    fold.push('<path style="opacity:' + op.toFixed(2) + '" d="M' + f1(a[0]) + ' ' + f1(a[1]) + 'L' + f1(c[0]) + ' ' + f1(c[1]) + '"/>');
+  }
+  foldsEl.innerHTML = fold.join("");
+  // sombra sobre el piso (z = 0)
+  const fl = [];
+  for (const p of PANELS) for (const [x, y] of outerOf(p)) { const q = ap(W[p.name], [x, y, 0]); fl.push(iso([q[0], q[1], 0])); }
+  shadowEl.setAttribute("d", pathOfPts(convexHull(fl)));
+  shadowEl.style.opacity = (0.55 * (1 - body.e) * (1 - body.e)).toFixed(3);
+
+  // textos
+  let label, deg = "";
+  if (u <= 0.001) label = "CHAPA <b>PLANA</b>";
+  else if (u >= 2.999) label = "<b>PLEGADO</b>";
+  else {
+    label = "PASO " + (step + 1) + " · <b>" + STEPS[step].what.toUpperCase() + "</b>";
+    deg = fmt(STEPS[step].angle * frac[step]) + "° / " + fmt(STEPS[step].angle) + "°";
+  }
+  if (tagEl.innerHTML !== label) tagEl.innerHTML = label;
+  if (degEl.textContent !== deg) degEl.textContent = deg;
+  stepEls.forEach((el, i) => el.classList.toggle("on", u > 0.001 && (i === step || u >= 2.999)));
+  if (!dragging) range.value = Math.round(u * 1000);
+  range.style.setProperty("--p", (u / 3 * 100).toFixed(2) + "%");
+  range.setAttribute("aria-valuetext", label.replace(/<[^>]+>/g, "") + (deg ? " " + deg : ""));
+  const done = target >= 3 || (target === u && u >= 2.999);
+  btn.classList.toggle("on", done);
+  btn.setAttribute("aria-pressed", String(done));
+  btnTxt.textContent = done ? "Desplegar" : "Plegar";
+}
+
+// ---------- animación ----------
+const still = matchMedia("(prefers-reduced-motion: reduce)");
+const TOUR = [[0,1.2],[1,2.4],[1,0.9],[2,2.4],[2,0.9],[2.3,2.4],[2.3,0.5],[2.75,2.6],[2.75,1.4],[3,2.4],[3,2.2],[2,3.8],[0,2.6]];
+const tourLen = TOUR.reduce((s, [, d]) => s + d, 0);
+function tourAt(t) {
+  t %= tourLen; let u0 = 0;
+  for (const [u1, d] of TOUR) { if (t < d) return u0 + (u1 - u0) * (u1 === u0 ? 0 : ease(t / d)); t -= d; u0 = u1; }
+  return 0;
+}
+let u = 0, target = 0, raf = 0, last = 0, clock = 0, touring = !still.matches, dragging = false, visible = true;
+const speedAt = (v) => (v < 2 ? 0.6 : 0.26); // el paso 3 incluye el giro: va más lento
+function tick(now) {
+  const dt = last ? Math.min((now - last) / 1000, 1 / 30) : 1 / 60;
+  last = now;
+  if (touring) { clock += dt; u = tourAt(clock); }
+  else if (u !== target) {
+    if (still.matches) u = target;
+    else { const d = target - u, stepU = speedAt(Math.min(u, target) + 1e-6) * dt; u = Math.abs(d) <= stepU ? target : u + Math.sign(d) * stepU; }
+  }
+  draw(u);
+  raf = visible && (touring || u !== target) ? requestAnimationFrame(tick) : 0;
+}
+const run = () => { if (!raf && visible) { last = 0; raf = requestAnimationFrame(tick); } };
+const stopTour = () => { if (touring) { touring = false; target = u; } };
+
+range.addEventListener("input", () => { stopTour(); dragging = true; u = target = range.value / 1000; lastKey = ""; draw(u); });
+range.addEventListener("change", () => { dragging = false; });
+btn.addEventListener("click", (ev) => {
+  ev.stopPropagation(); stopTour();
+  target = (target >= 3 || u >= 2.999) ? 0 : 3;
+  run();
+});
+
+stepEls.forEach((el) => el.addEventListener("click", () => { stopTour(); target = Number(el.dataset.to); run(); }));
+let azAnim = 0;
+card.addEventListener("dblclick", (ev) => {
+  if (ev.target.closest(".btn")) return;
+  const from = az, to = BASE_AZ + Math.round((az - BASE_AZ) / 360) * 360, t0 = performance.now();
+  cancelAnimationFrame(azAnim);
+  const go = (now) => { const k = ease((now - t0) / 500); az = from + (to - from) * k; lastKey = ""; draw(u); if (k < 1) azAnim = requestAnimationFrame(go); };
+  azAnim = requestAnimationFrame(go);
+});
+
+// girar arrastrando (dedo o mouse)
+let drag = null;
+card.addEventListener("pointerdown", (ev) => {
+  if (ev.target.closest(".btn")) return;
+  drag = { x: ev.clientX, y: ev.clientY, az, id: ev.pointerId, active: ev.pointerType === "mouse" };
+  if (drag.active) { card.setPointerCapture(ev.pointerId); card.classList.add("drag"); }
+});
+card.addEventListener("pointermove", (ev) => {
+  if (!drag || ev.pointerId !== drag.id) return;
+  const dx = ev.clientX - drag.x, dy = ev.clientY - drag.y;
+  if (!drag.active) {
+    if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy)) { drag.active = true; card.setPointerCapture(ev.pointerId); card.classList.add("drag"); }
+    else return;
+  }
+  az = drag.az - dx * 0.45;
+  lastKey = ""; draw(u);
+});
+const endDrag = () => { drag = null; card.classList.remove("drag"); };
+card.addEventListener("pointerup", endDrag);
+card.addEventListener("pointercancel", endDrag);
+
+new IntersectionObserver((e) => { visible = e[e.length - 1].isIntersecting; if (visible) run(); }, { rootMargin: "120px 0px" }).observe(card);
+new ResizeObserver(() => { lastKey = ""; draw(u); }).observe(card);
+
+(function center() {
+  const { W } = worldAt(3);
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const p of PANELS) for (const [x, y] of outerOf(p)) { const q = ap(W[p.name], [x, y, 0]); x0 = Math.min(x0, q[0]); x1 = Math.max(x1, q[0]); y0 = Math.min(y0, q[1]); y1 = Math.max(y1, q[1]); }
+  CX = (x0 + x1) / 2; CY = (y0 + y1) / 2;
+})();
+BASE = baseBox();
+const padX = (BASE.x1 - BASE.x0) * 0.03, padY = (BASE.y1 - BASE.y0) * 0.03;
+BASE = { x0: BASE.x0 - padX, y0: BASE.y0 - padY, x1: BASE.x1 + padX, y1: BASE.y1 + padY };
+if (still.matches) u = target = 3;
+draw(u);
+run();
+window.__pose = (v, a) => { touring = false; if (a !== undefined) az = a; target = u = v; lastKey = ""; draw(v); };
+})();
+</script>
+</body>
+</html>
